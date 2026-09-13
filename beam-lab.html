@@ -1,0 +1,983 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Beam Lab — Structural Theory</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink-900:#F7F1E8;
+    --ink-800:#FFFFFF;
+    --ink-700:#FBF5EC;
+    --ink-650:#F1E4DA;
+    --line:#D9C3BE;
+    --line-soft:#E9DCD3;
+    --paper:#2B0A10;
+    --muted:#7C6259;
+    --muted-dim:#A88F84;
+    --load:#7A1B2B;
+    --load-dim:#B98A90;
+    --shear:#1E6E74;
+    --moment:#A9711B;
+    --danger:#B23A2E;
+    --good:#2E7D4F;
+    --gold:#A9791E;
+    --radius:10px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(circle at 1px 1px, var(--line-soft) 1px, transparent 1px) 0 0/28px 28px,
+      var(--ink-900);
+    color:var(--paper);
+    font-family:'Inter',sans-serif;
+    -webkit-font-smoothing:antialiased;
+    min-height:100vh;
+  }
+  .wrap{max-width:1400px;margin:0 auto;padding:18px 18px 60px;}
+
+  /* ---------- Title block (signature element) ---------- */
+  .titleblock{
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    background:linear-gradient(180deg, var(--ink-800), var(--ink-700));
+    display:flex;
+    align-items:stretch;
+    flex-wrap:wrap;
+    overflow:hidden;
+    margin-bottom:18px;
+  }
+  .titleblock .main{
+    flex:1 1 320px;
+    padding:18px 22px;
+    border-right:1px solid var(--line);
+  }
+  .titleblock .eyebrow{
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px;
+    letter-spacing:.18em;
+    color:var(--gold);
+    text-transform:uppercase;
+    margin-bottom:6px;
+  }
+  .titleblock h1{
+    font-family:'Space Grotesk',sans-serif;
+    font-size:26px;
+    font-weight:700;
+    margin:0 0 4px;
+    letter-spacing:.01em;
+  }
+  .titleblock .byline{
+    font-family:'Inter',sans-serif;
+    font-size:12px;
+    font-weight:500;
+    color:var(--muted);
+    margin-bottom:10px;
+    letter-spacing:.01em;
+  }
+  .titleblock p{margin:0;color:var(--muted);font-size:13.5px;max-width:56ch;line-height:1.5;}
+  .titleblock .fields{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(120px,1fr));
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px;
+  }
+  .titleblock .field{
+    padding:10px 16px;
+    border-right:1px solid var(--line-soft);
+    border-bottom:1px solid var(--line-soft);
+    display:flex;flex-direction:column;justify-content:center;gap:3px;
+    min-width:130px;
+  }
+  .titleblock .field:nth-child(2n){border-right:none;}
+  .titleblock .field .k{color:var(--muted-dim);letter-spacing:.1em;font-size:9.5px;text-transform:uppercase;}
+  .titleblock .field .v{color:var(--paper);font-size:12.5px;}
+
+  /* ---------- layout ---------- */
+  .grid{display:grid;grid-template-columns:320px 1fr;gap:18px;align-items:start;}
+  @media (max-width:980px){.grid{grid-template-columns:1fr;}}
+
+  .panel{
+    background:linear-gradient(180deg,var(--ink-800),var(--ink-700));
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:16px;
+    margin-bottom:16px;
+  }
+  .panel h2{
+    font-family:'Space Grotesk',sans-serif;
+    font-size:13px;
+    letter-spacing:.06em;
+    text-transform:uppercase;
+    color:var(--load);
+    margin:0 0 12px;
+    display:flex;align-items:center;gap:8px;
+  }
+  .panel h2 .num{
+    font-family:'JetBrains Mono',monospace;
+    font-size:10px;
+    color:var(--muted-dim);
+    border:1px solid var(--line);
+    border-radius:4px;
+    padding:1px 5px;
+  }
+
+  label{display:block;font-size:11.5px;color:var(--muted);margin-bottom:4px;font-family:'JetBrains Mono',monospace;letter-spacing:.03em;}
+  select,input[type=number],input[type=text]{
+    width:100%;
+    background:var(--ink-900);
+    border:1px solid var(--line);
+    color:var(--paper);
+    border-radius:7px;
+    padding:8px 10px;
+    font-family:'JetBrains Mono',monospace;
+    font-size:13px;
+    margin-bottom:10px;
+    outline:none;
+  }
+  select:focus,input:focus{border-color:var(--gold);}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+  .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}
+
+  button{
+    font-family:'Space Grotesk',sans-serif;
+    font-weight:600;
+    font-size:12.5px;
+    border-radius:7px;
+    border:1px solid var(--line);
+    background:var(--ink-650);
+    color:var(--paper);
+    padding:9px 12px;
+    cursor:pointer;
+    transition:transform .05s ease, border-color .15s ease, background .15s ease;
+  }
+  button:hover{border-color:var(--gold);background:#F3E7DA;}
+  button:active{transform:translateY(1px);}
+  button.primary{background:var(--load);color:#fff;border-color:var(--load);}
+  button.primary:hover{filter:brightness(1.1);background:var(--load);}
+  button.ghost{background:transparent;}
+  button.full{width:100%;}
+  button.small{padding:5px 8px;font-size:11px;}
+  button:focus-visible, select:focus-visible, input:focus-visible{outline:2px solid var(--gold);outline-offset:1px;}
+
+  .preset-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:4px;}
+
+  .loadlist{display:flex;flex-direction:column;gap:8px;margin-bottom:10px;}
+  .loadchip{
+    display:flex;align-items:center;justify-content:space-between;
+    background:var(--ink-900);border:1px solid var(--line-soft);
+    border-radius:7px;padding:8px 10px;font-size:12px;
+  }
+  .loadchip .desc{font-family:'JetBrains Mono',monospace;color:var(--paper);}
+  .loadchip .tag{font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted-dim);}
+  .loadchip button{padding:3px 7px;font-size:11px;border-color:var(--danger);color:var(--danger);background:transparent;}
+  .loadchip button:hover{background:rgba(178,58,46,.12);}
+
+  .addload{border-top:1px dashed var(--line);padding-top:10px;margin-top:2px;}
+
+  .stage{background:linear-gradient(180deg,var(--ink-800),var(--ink-700));border:1px solid var(--line);border-radius:var(--radius);padding:16px 16px 6px;margin-bottom:16px;}
+  .stage svg{width:100%;height:auto;display:block;}
+
+  .status{
+    display:flex;align-items:center;gap:8px;
+    font-family:'JetBrains Mono',monospace;font-size:12px;
+    padding:8px 12px;border-radius:7px;margin-bottom:14px;
+    border:1px solid var(--line);
+  }
+  .status.ok{color:var(--good);border-color:#BFE3CD;background:#EAF7EF;}
+  .status.bad{color:var(--danger);border-color:#F0C4BC;background:#FBEAE7;}
+  .status .dot{width:7px;height:7px;border-radius:50%;background:currentColor;flex:none;}
+
+  .diagrams{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  @media (max-width:760px){.diagrams{grid-template-columns:1fr;}}
+  .diagram-card{background:var(--ink-900);border:1px solid var(--line-soft);border-radius:9px;padding:10px 12px 4px;}
+  .diagram-card .dhead{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px;}
+  .diagram-card .dtitle{font-family:'Space Grotesk',sans-serif;font-size:12.5px;font-weight:600;}
+  .diagram-card .dmeta{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--muted-dim);}
+
+  .eqns{font-family:'JetBrains Mono',monospace;font-size:12.5px;line-height:1.85;color:var(--paper);white-space:pre-wrap;}
+  .eqns .lbl{color:var(--muted-dim);}
+  .eqns .hi{color:var(--load);font-weight:600;}
+
+  .eqn-details{margin-top:14px;border-top:1px solid var(--line-soft);padding-top:10px;}
+  .eqn-details summary{
+    cursor:pointer;
+    font-family:'Space Grotesk',sans-serif;
+    font-size:12px;
+    font-weight:600;
+    color:var(--gold);
+    list-style:none;
+    display:flex;
+    align-items:center;
+    gap:6px;
+  }
+  .eqn-details summary::-webkit-details-marker{display:none;}
+  .eqn-details summary::before{content:'▸';font-size:10px;transition:transform .15s ease;}
+  .eqn-details[open] summary::before{transform:rotate(90deg);}
+  .eqn-details .eqns{margin-top:10px;}
+  .eqn-hint{font-size:11px;color:var(--muted-dim);margin-bottom:8px;font-family:'Inter',sans-serif;font-style:italic;}
+
+  .reactions-grid{display:flex;flex-wrap:wrap;gap:10px;margin-top:10px;}
+  .rchip{background:var(--ink-900);border:1px solid var(--line-soft);border-radius:8px;padding:8px 12px;min-width:120px;}
+  .rchip .k{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--muted-dim);text-transform:uppercase;letter-spacing:.08em;}
+  .rchip .v{font-family:'JetBrains Mono',monospace;font-size:15px;color:var(--paper);margin-top:2px;}
+
+  .steps{display:flex;flex-direction:column;gap:0;}
+  .step{
+    display:grid;grid-template-columns:52px 1fr;gap:12px;
+    padding:10px 0;border-bottom:1px solid var(--line-soft);
+  }
+  .step:last-child{border-bottom:none;}
+  .step .xmark{font-family:'JetBrains Mono',monospace;font-size:11.5px;color:var(--shear);padding-top:1px;}
+  .step .txt{font-size:13px;line-height:1.55;color:var(--paper);}
+  .step .txt b{color:var(--moment);font-weight:600;}
+  .step .txt .vv{color:var(--shear);}
+  .step .txt .mm{color:var(--moment);}
+
+  .legend{display:flex;gap:16px;flex-wrap:wrap;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);margin:2px 0 14px;}
+  .legend span{display:inline-flex;align-items:center;gap:6px;}
+  .legend i{width:10px;height:10px;border-radius:2px;display:inline-block;}
+
+  .footer-note{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--muted-dim);text-align:center;margin-top:20px;letter-spacing:.02em;}
+  .footer-note a{color:var(--muted);}
+  .brand-footer{text-align:center;margin-top:14px;padding-top:14px;border-top:1px solid var(--line-soft);}
+  .brand-footer .l1{font-family:'Space Grotesk',sans-serif;font-size:12px;font-weight:600;color:var(--gold);letter-spacing:.03em;}
+  .brand-footer .l2{font-family:'Inter',sans-serif;font-size:11px;color:var(--muted-dim);margin-top:3px;}
+
+  ::selection{background:var(--shear);color:var(--ink-900);}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="titleblock">
+    <div class="main">
+      <div class="eyebrow">School of Engineering — Theory of Structures</div>
+      <h1>Beam Lab</h1>
+      <div class="byline">Engr. Kr — Kairos Architectural and Engineering Consultancy</div>
+      <p>Place supports and loads on a beam, then watch the reactions, shear force diagram, and bending moment diagram build live — with the governing equations shown at every step.</p>
+    </div>
+    <div class="fields">
+      <div class="field"><span class="k">Scenario</span><span class="v" id="tb-scenario">Simply Supported</span></div>
+      <div class="field"><span class="k">Span</span><span class="v" id="tb-span">10.0 m</span></div>
+      <div class="field"><span class="k">Loads</span><span class="v" id="tb-loads">0 applied</span></div>
+      <div class="field"><span class="k">Max |M|</span><span class="v" id="tb-status">—</span></div>
+    </div>
+  </div>
+
+  <div class="grid">
+    <!-- ============ CONTROLS ============ -->
+    <div>
+      <div class="panel">
+        <h2><span class="num">01</span> Presets</h2>
+        <div class="preset-grid">
+          <button class="small" data-preset="ss-center">SS · Center load</button>
+          <button class="small" data-preset="ss-udl">SS · Full UDL</button>
+          <button class="small" data-preset="cant-tip">Cantilever · Tip load</button>
+          <button class="small" data-preset="cant-udl">Cantilever · UDL</button>
+          <button class="small" data-preset="overhang">Overhanging beam</button>
+          <button class="small" data-preset="moment-mid">SS · Applied moment</button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2><span class="num">02</span> Beam &amp; Supports</h2>
+        <label for="beamLength">Beam length L (m)</label>
+        <input type="number" id="beamLength" min="1" step="0.5" value="10">
+
+        <label for="supportType">Support configuration</label>
+        <select id="supportType">
+          <option value="simple">Two supports (simply supported / overhanging)</option>
+          <option value="cantilever">One fixed support (cantilever)</option>
+        </select>
+
+        <div id="simpleSupportFields" class="row2">
+          <div>
+            <label for="posA">Support A — pin, pos (m)</label>
+            <input type="number" id="posA" step="0.1" value="0">
+          </div>
+          <div>
+            <label for="posB">Support B — roller, pos (m)</label>
+            <input type="number" id="posB" step="0.1" value="10">
+          </div>
+        </div>
+
+        <div id="cantileverFields" style="display:none;">
+          <label for="posFixed">Fixed support position (m)</label>
+          <input type="number" id="posFixed" step="0.1" value="0">
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2><span class="num">03</span> Loads</h2>
+        <div class="loadlist" id="loadList"></div>
+
+        <div class="addload">
+          <label for="loadType">Add a load</label>
+          <select id="loadType">
+            <option value="point">Point load (kN, ↑ positive)</option>
+            <option value="udl">Distributed load (kN/m, ↑ positive)</option>
+            <option value="moment">Applied moment (kN·m, ⟳ CW positive)</option>
+          </select>
+          <div class="row3" id="loadFields"></div>
+          <button class="full primary" id="addLoadBtn">+ Add load</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ STAGE ============ -->
+    <div>
+      <div class="stage">
+        <div class="legend">
+          <span><i style="background:var(--paper)"></i>Beam / supports</span>
+          <span><i style="background:var(--load)"></i>Applied loads</span>
+          <span><i style="background:var(--shear)"></i>Shear V(x)</span>
+          <span><i style="background:var(--moment)"></i>Moment M(x)</span>
+        </div>
+        <div id="beamSvgHolder"></div>
+      </div>
+
+      <div class="stage" id="statusHolder"></div>
+
+      <div class="stage">
+        <h2 style="font-family:'Space Grotesk',sans-serif;font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--load);margin:0 0 4px;">Support reactions</h2>
+        <div class="reactions-grid" id="reactionChips"></div>
+        <details class="eqn-details">
+          <summary>Show the equilibrium equations</summary>
+          <div class="eqns" id="eqnHolder"></div>
+        </details>
+      </div>
+
+      <div class="diagrams">
+        <div class="diagram-card">
+          <div class="dhead"><span class="dtitle">Shear force diagram</span><span class="dmeta" id="vMeta"></span></div>
+          <div id="sfdHolder"></div>
+        </div>
+        <div class="diagram-card">
+          <div class="dhead"><span class="dtitle">Bending moment diagram</span><span class="dmeta" id="mMeta"></span></div>
+          <div id="bmdHolder"></div>
+        </div>
+      </div>
+
+      <div class="panel" style="margin-top:16px;">
+        <h2><span class="num">04</span> Walk through the diagram</h2>
+        <div class="steps" id="stepsHolder"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer-note">Sign convention — upward positive for every force (applied loads and reactions alike) · applied moments positive clockwise · bending moment positive = sagging (concave up)</div>
+  <div class="brand-footer">
+    <div class="l1">Manuel L. Quezon University · School of Engineering — Theory of Structures</div>
+    <div class="l2">Developed by Engr. Kr using Claude — Kairos Architectural and Engineering Consultancy</div>
+  </div>
+</div>
+
+<script>
+/* =====================================================================
+   STATE
+===================================================================== */
+let state = {
+  L: 10,
+  supportType: 'simple',
+  posA: 0, posB: 10,
+  posFixed: 0,
+  loads: [],   // {id, kind:'point'|'udl'|'moment', mag, pos, pos2}
+  nextId: 1
+};
+
+function loadPreset(name){
+  state.loads = [];
+  state.nextId = 1;
+  if(name==='ss-center'){
+    state.L=10; state.supportType='simple'; state.posA=0; state.posB=10;
+    addLoad('point', -10, 5);
+  } else if(name==='ss-udl'){
+    state.L=8; state.supportType='simple'; state.posA=0; state.posB=8;
+    addLoad('udl', -5, 0, 8);
+  } else if(name==='cant-tip'){
+    state.L=6; state.supportType='cantilever'; state.posFixed=0;
+    addLoad('point', -8, 6);
+  } else if(name==='cant-udl'){
+    state.L=6; state.supportType='cantilever'; state.posFixed=0;
+    addLoad('udl', -4, 0, 6);
+  } else if(name==='overhang'){
+    state.L=10; state.supportType='simple'; state.posA=2; state.posB=8;
+    addLoad('point', -6, 0);
+    addLoad('point', -6, 10);
+    addLoad('point', -12, 5);
+  } else if(name==='moment-mid'){
+    state.L=10; state.supportType='simple'; state.posA=0; state.posB=10;
+    addLoad('moment', 20, 5);
+  }
+  syncFormFromState();
+  render();
+}
+
+function addLoad(kind, mag, pos, pos2){
+  state.loads.push({id:state.nextId++, kind, mag:Number(mag), pos:Number(pos), pos2: pos2==null?null:Number(pos2)});
+}
+
+/* =====================================================================
+   ANALYSIS ENGINE
+===================================================================== */
+function analyze(){
+  const L = state.L;
+  const loads = state.loads;
+
+  // build list of point-force equivalents and moment sources for equilibrium
+  // ALL forces (loads AND reactions) share one convention: positive = upward.
+  const pointForces = []; // {pos, F} upward positive
+  const momentSources = []; // {pos, M} CW positive (external applied moments only, for now)
+  loads.forEach(ld=>{
+    if(ld.kind==='point'){
+      pointForces.push({pos:ld.pos, F:ld.mag, label:`Point load @ x=${fmt(ld.pos)}`});
+    } else if(ld.kind==='udl'){
+      const a=Math.min(ld.pos, ld.pos2), b=Math.max(ld.pos, ld.pos2);
+      pointForces.push({pos:(a+b)/2, F: ld.mag*(b-a), _udl:true, a, b, w:ld.mag,
+        label:`UDL resultant, ${fmt(ld.mag)}×${fmt(b-a)} @ x=${fmt((a+b)/2)}`});
+    } else if(ld.kind==='moment'){
+      momentSources.push({pos:ld.pos, M: ld.mag, label:`Applied moment @ x=${fmt(ld.pos)}`});
+    }
+  });
+
+  let supports = [];
+  let valid = true, reason = '';
+
+  if(state.supportType==='simple'){
+    const a = Math.min(state.posA, state.posB);
+    const b = Math.max(state.posA, state.posB);
+    if(a===b){ valid=false; reason='Support A and Support B are at the same position — the beam is unstable.'; }
+    if(a<0 || b>L){ valid=false; reason='Supports must lie within the beam span [0, L].'; }
+    if(valid){
+      const totalF = pointForces.reduce((s,p)=>s+p.F,0); // upward positive
+      const sumMextA = momentSources.reduce((s,m)=>s+m.M,0); // CW+ applied moments
+      const sumFMomentA = pointForces.reduce((s,p)=>s + p.F*(a-p.pos), 0);
+      // CW-positive equilibrium about A: R_B = [Σ F·(a-pos) + Σ M0(CW+)] / (b-a)
+      const RB = (sumFMomentA + sumMextA) / (b-a);
+      const RA = -RB - totalF; // ΣF_y = 0 (↑+): R_A + R_B + ΣF_loads = 0
+      supports = [
+        {pos:a, type:'pin', R:RA, Mreact:0},
+        {pos:b, type:'roller', R:RB, Mreact:0}
+      ];
+    }
+  } else {
+    const f = state.posFixed;
+    if(f<0 || f>L){ valid=false; reason='Fixed support must lie within the beam span [0, L].'; }
+    if(valid){
+      const totalF = pointForces.reduce((s,p)=>s+p.F,0); // upward positive
+      const sumMextF = momentSources.reduce((s,m)=>s+m.M,0); // CW+ applied moments
+      const sumFMomentF = pointForces.reduce((s,p)=>s + p.F*(p.pos-f), 0);
+      // CW-positive equilibrium about the fixed end: M_fix = Σ F·(pos-f) - Σ M0(CW+)
+      const Mfix = sumFMomentF - sumMextF; // CW positive reaction moment
+      const R = -totalF; // ΣF_y = 0 (↑+): R + ΣF_loads = 0
+      supports = [{pos:f, type:'fixed', R:R, Mreact:Mfix}];
+    }
+  }
+
+  if(!valid){
+    return {valid:false, reason};
+  }
+
+  // Unified moment-source list for internal diagram: external applied moments (CW+)
+  // plus fixed-support reaction moment (CW+), both add directly to M(x) once pos<=x.
+  const allMomentSources = momentSources.slice();
+  supports.forEach(s=>{ if(s.type==='fixed' && s.Mreact!==0) allMomentSources.push({pos:s.pos, M:s.Mreact}); });
+
+  function V(x){
+    // V(x) = sum of ALL upward-positive forces (reactions + loads) to the left of the cut
+    let v = 0;
+    supports.forEach(s=>{ if(s.pos<=x+1e-9) v += s.R; });
+    loads.forEach(ld=>{
+      if(ld.kind==='point'){ if(ld.pos<=x+1e-9) v += ld.mag; }
+      else if(ld.kind==='udl'){
+        const a=Math.min(ld.pos,ld.pos2), b=Math.max(ld.pos,ld.pos2);
+        if(a<=x){ const ov=Math.max(0, Math.min(x,b)-a); v += ld.mag*ov; }
+      }
+    });
+    return v;
+  }
+  function M(x){
+    let m = 0;
+    supports.forEach(s=>{ if(s.pos<=x+1e-9) m += s.R*(x-s.pos); });
+    loads.forEach(ld=>{
+      if(ld.kind==='point'){ if(ld.pos<=x+1e-9) m += ld.mag*(x-ld.pos); }
+      else if(ld.kind==='udl'){
+        const a=Math.min(ld.pos,ld.pos2), b=Math.max(ld.pos,ld.pos2);
+        if(a<=x){ const top=Math.min(x,b); const ov=Math.max(0, top-a); const centroid=a+ov/2; m += ld.mag*ov*(x-centroid); }
+      }
+    });
+    allMomentSources.forEach(ms=>{ if(ms.pos<=x+1e-9) m += ms.M; });
+    return m;
+  }
+
+  // sample
+  const N = 400;
+  const samples = [];
+  for(let i=0;i<=N;i++){
+    const x = L*i/N;
+    // sample just after breakpoints too by nudging; for plotting we handle jumps via duplicate points
+    samples.push({x, V:V(x), M:M(x)});
+  }
+
+  // breakpoints (positions where discontinuities / slope changes occur)
+  const bpSet = new Set([0, L]);
+  supports.forEach(s=>bpSet.add(round4(s.pos)));
+  loads.forEach(ld=>{
+    bpSet.add(round4(ld.pos));
+    if(ld.kind==='udl') bpSet.add(round4(ld.pos2));
+  });
+  const breakpoints = Array.from(bpSet).sort((a,b)=>a-b);
+
+  // build "plot points" with left/right values at breakpoints to render jumps correctly
+  const plot = [];
+  const EPS = Math.max(1e-4, L*1e-5);
+  breakpoints.forEach((x,idx)=>{
+    const xm = Math.max(0, x-EPS);
+    const xp = Math.min(L, x+EPS);
+    if(idx>0) plot.push({x, V:V(xm), M:M(xm), side:'left'});
+    plot.push({x, V:V(xp), M:M(xp), side:'right'});
+  });
+  // also include mid-segment samples so UDL curves look curved, not straight jump-to-jump
+  const dense = [];
+  for(let i=0;i<breakpoints.length-1;i++){
+    const x0=breakpoints[i], x1=breakpoints[i+1];
+    const steps=12;
+    for(let k=1;k<steps;k++){
+      const x = x0 + (x1-x0)*k/steps;
+      dense.push({x, V:V(x), M:M(x)});
+    }
+  }
+  const fullPlot = plot.concat(dense).sort((a,b)=>a.x-b.x || 0);
+
+  let maxV=-Infinity, minV=Infinity, maxM=-Infinity, minM=Infinity, atMaxV=0, atMinV=0, atMaxM=0, atMinM=0;
+  fullPlot.forEach(p=>{
+    if(p.V>maxV){maxV=p.V; atMaxV=p.x;}
+    if(p.V<minV){minV=p.V; atMinV=p.x;}
+    if(p.M>maxM){maxM=p.M; atMaxM=p.x;}
+    if(p.M<minM){minM=p.M; atMinM=p.x;}
+  });
+
+  return {
+    valid:true, supports, loads, breakpoints, fullPlot, pointForces, momentSources,
+    V, M, maxV, minV, atMaxV, atMinV, maxM, minM, atMaxM, atMinM
+  };
+}
+function round4(n){ return Math.round(n*10000)/10000; }
+
+/* =====================================================================
+   RENDERING — BEAM SCHEMATIC
+===================================================================== */
+const STAGE_W = 900, STAGE_H = 230;
+const MX0 = 60, MX1 = 840, BEAM_Y = 120;
+
+function xToPx(x, L){ return MX0 + (x/L)*(MX1-MX0); }
+
+function svgOpen(w,h){ return `<svg viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg">`; }
+
+function renderBeamSVG(a){
+  const L = state.L;
+  let s = svgOpen(STAGE_W, STAGE_H);
+  s += `<defs>
+    <marker id="arrLoad" markerWidth="8" markerHeight="8" refX="7.2" refY="4" markerUnits="userSpaceOnUse" orient="auto"><path d="M0,0.5 L7.5,4 L0,7.5 Z" fill="var(--load)"/></marker>
+    <marker id="arrMom" markerWidth="7" markerHeight="7" refX="6.2" refY="3.5" markerUnits="userSpaceOnUse" orient="auto"><path d="M0,0.4 L6.5,3.5 L0,6.6 Z" fill="var(--load)"/></marker>
+  </defs>`;
+  // dimension line
+  s += `<line x1="${MX0}" y1="34" x2="${MX1}" y2="34" stroke="var(--muted-dim)" stroke-width="1"/>`;
+  s += `<line x1="${MX0}" y1="28" x2="${MX0}" y2="40" stroke="var(--muted-dim)" stroke-width="1"/>`;
+  s += `<line x1="${MX1}" y1="28" x2="${MX1}" y2="40" stroke="var(--muted-dim)" stroke-width="1"/>`;
+  s += `<text x="${(MX0+MX1)/2}" y="24" fill="var(--muted-dim)" font-family="JetBrains Mono, monospace" font-size="11" text-anchor="middle">L = ${fmt(L)} m</text>`;
+
+  // beam line
+  s += `<line x1="${MX0}" y1="${BEAM_Y}" x2="${MX1}" y2="${BEAM_Y}" stroke="var(--paper)" stroke-width="4" stroke-linecap="round"/>`;
+
+  // supports
+  if(a.valid){
+    a.supports.forEach(sp=>{
+      const px = xToPx(sp.pos, L);
+      if(sp.type==='pin'){
+        s += `<polygon points="${px-13},${BEAM_Y+24} ${px+13},${BEAM_Y+24} ${px},${BEAM_Y}" fill="none" stroke="var(--paper)" stroke-width="2.5"/>`;
+        s += hatch(px-15, px+15, BEAM_Y+24);
+      } else if(sp.type==='roller'){
+        s += `<polygon points="${px-13},${BEAM_Y+20} ${px+13},${BEAM_Y+20} ${px},${BEAM_Y}" fill="none" stroke="var(--paper)" stroke-width="2.5"/>`;
+        s += `<circle cx="${px-8}" cy="${BEAM_Y+27}" r="4" fill="none" stroke="var(--paper)" stroke-width="2"/>`;
+        s += `<circle cx="${px+8}" cy="${BEAM_Y+27}" r="4" fill="none" stroke="var(--paper)" stroke-width="2"/>`;
+        s += hatch(px-15, px+15, BEAM_Y+33);
+      } else if(sp.type==='fixed'){
+        s += `<line x1="${px}" y1="${BEAM_Y-28}" x2="${px}" y2="${BEAM_Y+28}" stroke="var(--paper)" stroke-width="3"/>`;
+        s += hatchVertical(px, BEAM_Y-28, BEAM_Y+28, sp.pos < L/2 ? -1 : 1);
+      }
+      s += `<text x="${px}" y="${BEAM_Y+52}" fill="var(--muted)" font-family="JetBrains Mono, monospace" font-size="10.5" text-anchor="middle">${sp.type.toUpperCase()} · x=${fmt(sp.pos)}</text>`;
+    });
+  }
+
+  // loads
+  state.loads.forEach(ld=>{
+    if(ld.kind==='point'){
+      const px = xToPx(ld.pos, L);
+      const down = ld.mag<0;
+      const yFar = BEAM_Y-58, yNear=BEAM_Y-4;
+      // downward (negative, per up-positive convention): tail far from beam, tip at beam. upward (positive): tail at beam, tip far from beam.
+      const [sx1,sy1,sx2,sy2] = down ? [px,yFar,px,yNear] : [px,yNear,px,yFar];
+      s += `<line x1="${sx1}" y1="${sy1}" x2="${sx2}" y2="${sy2}" stroke="var(--load)" stroke-width="2.5" marker-end="url(#arrLoad)"/>`;
+      s += `<text x="${px}" y="${yFar-6}" fill="var(--load)" font-family="JetBrains Mono, monospace" font-size="11.5" text-anchor="middle">${fmt(ld.mag)} kN ${down?'↓':'↑'}</text>`;
+    } else if(ld.kind==='udl'){
+      const a0=Math.min(ld.pos,ld.pos2), b0=Math.max(ld.pos,ld.pos2);
+      const px0=xToPx(a0,L), px1=xToPx(b0,L);
+      const down = ld.mag<0;
+      const farY = BEAM_Y-42, nearY = BEAM_Y-4;
+      s += `<line x1="${px0}" y1="${farY}" x2="${px1}" y2="${farY}" stroke="var(--load)" stroke-width="2"/>`;
+      const n = Math.max(2, Math.round((px1-px0)/34));
+      for(let i=0;i<=n;i++){
+        const px = px0 + (px1-px0)*i/n;
+        const [sx1,sy1,sx2,sy2] = down ? [px,farY,px,nearY] : [px,nearY,px,farY];
+        s += `<line x1="${sx1}" y1="${sy1}" x2="${sx2}" y2="${sy2}" stroke="var(--load)" stroke-width="2" marker-end="url(#arrLoad)"/>`;
+      }
+      s += `<text x="${(px0+px1)/2}" y="${farY-8}" fill="var(--load)" font-family="JetBrains Mono, monospace" font-size="11.5" text-anchor="middle">${fmt(ld.mag)} kN/m ${down?'↓':'↑'}</text>`;
+    } else if(ld.kind==='moment'){
+      const px = xToPx(ld.pos, L);
+      const r = 18;
+      const cw = ld.mag>=0;
+      const cy = BEAM_Y-32;
+      // Increasing angle sweeps clockwise on screen (y-down). Sample the arc directly
+      // to avoid the SVG arc command's center ambiguity at a fixed radius.
+      const startAng = cw ? -30 : 210;
+      const endAng = cw ? 240 : -60;
+      s += `<path d="${arcPath(px,cy,r,startAng,endAng)}" fill="none" stroke="var(--load)" stroke-width="2.5" stroke-linecap="round" marker-end="url(#arrMom)"/>`;
+      s += `<text x="${px}" y="${cy-r-10}" fill="var(--load)" font-family="JetBrains Mono, monospace" font-size="11.5" text-anchor="middle">${fmt(Math.abs(ld.mag))} kN·m ${cw?'⟳':'⟲'}</text>`;
+    }
+  });
+
+  s += `</svg>`;
+  return s;
+}
+function polar(cx,cy,r,deg){ const rad=deg*Math.PI/180; return {x:cx+r*Math.cos(rad), y:cy+r*Math.sin(rad)}; }
+function arcPath(cx,cy,r,startDeg,endDeg,steps=32){
+  // Samples points directly off the circle (cx,cy,r) from startDeg to endDeg — avoids the
+  // SVG "A" arc command's ambiguity (two circles of the same radius can pass through two
+  // given endpoints), which is what caused the moment arrow to bulge incorrectly.
+  let d = '';
+  for(let i=0;i<=steps;i++){
+    const t = startDeg + (endDeg-startDeg)*i/steps;
+    const p = polar(cx,cy,r,t);
+    d += (i===0?'M':'L') + p.x.toFixed(2) + ',' + p.y.toFixed(2) + ' ';
+  }
+  return d;
+}
+function hatch(x0,x1,y){
+  let s='';
+  for(let x=x0;x<=x1;x+=6){ s += `<line x1="${x}" y1="${y}" x2="${x+6}" y2="${y+8}" stroke="var(--muted-dim)" stroke-width="1.4"/>`; }
+  return s;
+}
+function hatchVertical(x,y0,y1,dir){
+  let s='';
+  for(let y=y0;y<=y1;y+=7){ s += `<line x1="${x}" y1="${y}" x2="${x+dir*8}" y2="${y+7}" stroke="var(--muted-dim)" stroke-width="1.4"/>`; }
+  return s;
+}
+
+/* =====================================================================
+   RENDERING — SFD / BMD
+===================================================================== */
+function renderDiagram(a, key, color, unit){
+  const L = state.L;
+  const W=420, H=170, mx0=44, mx1=W-16, my0=16, my1=H-26;
+  if(!a.valid) return `${svgOpen(W,H)}</svg>`;
+  let lo, hi;
+  if(key==='V'){ lo=a.minV; hi=a.maxV; } else { lo=a.minM; hi=a.maxM; }
+  if(lo>0) lo=0; if(hi<0) hi=0;
+  const pad = Math.max(1e-6, (hi-lo)*0.18);
+  lo -= pad; hi += pad;
+  const yToPx = v => my1 - (v-lo)/(hi-lo)*(my1-my0);
+  const xToPxL = x => mx0 + (x/L)*(mx1-mx0);
+  const zeroY = yToPx(0);
+
+  let s = svgOpen(W,H);
+  // gridlines
+  s += `<line x1="${mx0}" y1="${zeroY}" x2="${mx1}" y2="${zeroY}" stroke="var(--line)" stroke-width="1"/>`;
+  s += `<line x1="${mx0}" y1="${my0}" x2="${mx0}" y2="${my1}" stroke="var(--line)" stroke-width="1"/>`;
+  s += `<text x="${mx0-6}" y="${zeroY+3}" fill="var(--muted-dim)" font-family="JetBrains Mono, monospace" font-size="9.5" text-anchor="end">0</text>`;
+  s += `<text x="4" y="${my0+2}" fill="var(--muted-dim)" font-family="JetBrains Mono, monospace" font-size="9" text-anchor="start">${fmt(hi)}</text>`;
+  s += `<text x="4" y="${my1+2}" fill="var(--muted-dim)" font-family="JetBrains Mono, monospace" font-size="9" text-anchor="start">${fmt(lo)}</text>`;
+
+  const pts = a.fullPlot.map(p=>({x:xToPxL(p.x), y:yToPx(p[key])}));
+  // area path
+  let areaD = `M${pts[0].x},${zeroY} `;
+  pts.forEach(p=>{ areaD += `L${p.x},${p.y} `; });
+  areaD += `L${pts[pts.length-1].x},${zeroY} Z`;
+  s += `<path d="${areaD}" fill="${color}" opacity="0.16"/>`;
+
+  let lineD = `M${pts[0].x},${pts[0].y} `;
+  pts.forEach(p=>{ lineD += `L${p.x},${p.y} `; });
+  s += `<path d="${lineD}" fill="none" stroke="${color}" stroke-width="2.2"/>`;
+
+  // extrema markers
+  const extremaX = key==='V' ? [a.atMaxV, a.atMinV] : [a.atMaxM, a.atMinM];
+  const extremaV = key==='V' ? [a.maxV, a.minV] : [a.maxM, a.minM];
+  extremaX.forEach((x,i)=>{
+    const v = extremaV[i];
+    if(Math.abs(v) < 1e-6) return;
+    const px=xToPxL(x), py=yToPx(v);
+    s += `<circle cx="${px}" cy="${py}" r="3" fill="${color}"/>`;
+    s += `<text x="${px}" y="${py + (v>=0?-7:14)}" fill="${color}" font-family="JetBrains Mono, monospace" font-size="10" text-anchor="middle">${fmt(v)}${unit}</text>`;
+  });
+
+  s += `</svg>`;
+  return s;
+}
+
+/* =====================================================================
+   RENDER — reactions / equations / steps / status
+===================================================================== */
+function renderStatus(a){
+  const el = document.getElementById('statusHolder');
+  const tbMaxM = document.getElementById('tb-status');
+  if(a.valid){
+    el.innerHTML = '';
+    el.style.display = 'none';
+    const peak = Math.max(Math.abs(a.maxM===-Infinity?0:a.maxM), Math.abs(a.minM===Infinity?0:a.minM));
+    tbMaxM.textContent = fmt(peak) + ' kN·m';
+  } else {
+    el.style.display = '';
+    el.innerHTML = `<div class="status bad"><span class="dot"></span> ${a.reason}</div>`;
+    tbMaxM.textContent = '—';
+  }
+}
+
+function renderReactions(a){
+  const eqnEl = document.getElementById('eqnHolder');
+  const chipEl = document.getElementById('reactionChips');
+  if(!a.valid){ eqnEl.innerHTML=''; chipEl.innerHTML=''; return; }
+
+  const totalF = a.pointForces.reduce((s,p)=>s+p.F,0);
+  const noLoads = a.pointForces.length===0 && a.momentSources.length===0;
+
+  function line(txt){ return `<div>${txt}</div>`; }
+  function sub(txt){ return `<div style="color:var(--muted);padding-left:14px;">${txt}</div>`; }
+  const CW='<span style="color:var(--load)">clockwise ↻</span>', CCW='<span style="color:var(--shear)">counter-clockwise ↺</span>';
+
+  // Builds one "force × arm = magnitude, direction" line. `signedVal` carries the true
+  // sign for the running total; only its sign (not its value) decides CW vs CCW here —
+  // the multiplication shown to the student always uses plain positive magnitudes.
+  function momentLine(magF, arm, signedVal, label){
+    const dir = signedVal>=0 ? CW : CCW;
+    return sub(`(${fmt(magF)} kN) × (${fmt(arm)} m)  =  <span class="hi">${fmt(Math.abs(signedVal))}</span> kN·m, ${dir} &nbsp; <span style="color:var(--muted-dim)">[${label}]</span>`);
+  }
+
+  let eqns = '';
+  if(state.supportType==='simple'){
+    const A=a.supports[0], B=a.supports[1];
+    const armB = B.pos-A.pos; // B is always to the right of A by construction
+    eqns += line(`<span class="lbl">ΣM about A = 0</span>  <span style="color:var(--muted-dim)">(clockwise positive)</span>`);
+    if(noLoads){
+      eqns += sub(`no loads applied`);
+    } else {
+      a.pointForces.forEach(p=>{
+        const arm = Math.abs(A.pos-p.pos);
+        const signedVal = p.F*(A.pos-p.pos);
+        eqns += momentLine(Math.abs(p.F), arm, signedVal, p.label);
+      });
+      a.momentSources.forEach(m=>{
+        eqns += sub(`${fmt(Math.abs(m.M))} kN·m, ${m.M>=0?CW:CCW} &nbsp; <span style="color:var(--muted-dim)">[${m.label}, direction as given]</span>`);
+      });
+    }
+    const loadSum = a.pointForces.reduce((s,p)=>s+p.F*(A.pos-p.pos),0) + a.momentSources.reduce((s,m)=>s+m.M,0);
+    eqns += sub(`R_B acts upward, to the right of A, so its moment about A is ${CCW}: R_B × ${fmt(armB)} m &nbsp; <span style="color:var(--muted-dim)">[enters as −R_B×${fmt(armB)}]</span>`);
+    eqns += sub(`${fmt(loadSum)} − R_B × ${fmt(armB)} = 0  →  <span class="hi">R_B = ${fmt(B.R)} kN</span>`);
+    eqns += line(`<span class="lbl">ΣF_y = 0</span>  <span style="color:var(--muted-dim)">(upward positive)</span>`);
+    eqns += sub(`R_A + R_B + ΣF_loads = 0`);
+    eqns += sub(`R_A + (${fmt(B.R)}) + (${fmt(totalF)}) = 0  →  <span class="hi">R_A = ${fmt(A.R)} kN</span>`);
+  } else {
+    const F = a.supports[0];
+    eqns += line(`<span class="lbl">ΣF_y = 0</span>  <span style="color:var(--muted-dim)">(upward positive)</span>`);
+    eqns += sub(`R + ΣF_loads = 0`);
+    eqns += sub(`R + (${fmt(totalF)}) = 0  →  <span class="hi">R = ${fmt(F.R)} kN</span>`);
+    eqns += line(`<span class="lbl">ΣM about fixed end = 0</span>  <span style="color:var(--muted-dim)">(clockwise positive)</span>`);
+    if(noLoads && a.momentSources.length===0){
+      eqns += sub(`no loads applied`);
+    } else {
+      a.pointForces.forEach(p=>{
+        const arm = Math.abs(F.pos-p.pos);
+        const signedVal = p.F*(F.pos-p.pos);
+        eqns += momentLine(Math.abs(p.F), arm, signedVal, p.label);
+      });
+      a.momentSources.forEach(m=>{
+        eqns += sub(`${fmt(Math.abs(m.M))} kN·m, ${m.M>=0?CW:CCW} &nbsp; <span style="color:var(--muted-dim)">[${m.label}, direction as given]</span>`);
+      });
+    }
+    const loadSum = a.pointForces.reduce((s,p)=>s+p.F*(F.pos-p.pos),0) + a.momentSources.reduce((s,m)=>s+m.M,0);
+    eqns += sub(`Assume M_fix is clockwise (+)`);
+    eqns += sub(`${fmt(loadSum)} + M_fix = 0  →  <span class="hi">M_fix = ${fmt(F.Mreact)} kN·m</span>${F.Mreact<0?' &nbsp; (negative — so M_fix is actually counter-clockwise ↺, opposite the assumed direction)':' &nbsp; (clockwise, as assumed)'}`);
+  }
+  eqnEl.innerHTML = eqns;
+
+  chipEl.innerHTML = a.supports.map(s=>{
+    let chip = `<div class="rchip"><div class="k">R at x=${fmt(s.pos)} m</div><div class="v">${fmt(s.R)} kN ${s.R>=0?'↑':'↓'}</div></div>`;
+    if(s.type==='fixed'){
+      chip += `<div class="rchip"><div class="k">M at x=${fmt(s.pos)} m</div><div class="v">${fmt(s.Mreact)} kN·m</div></div>`;
+    }
+    return chip;
+  }).join('');
+}
+
+function renderSteps(a){
+  const el = document.getElementById('stepsHolder');
+  if(!a.valid){ el.innerHTML = '<div class="step"><div class="xmark"></div><div class="txt">Fix the support configuration above to see the walkthrough.</div></div>'; return; }
+  const bps = a.breakpoints;
+  let html = '';
+  const EPS = Math.max(1e-4, state.L*1e-5);
+
+  // opening step
+  html += stepRow('x=0', `Beam starts at <b>x = 0</b>. Shear <span class="vv">V = ${fmt(a.V(EPS))} kN</span>, moment <span class="mm">M = ${fmt(a.M(EPS))} kN·m</span>.`);
+
+  for(let i=0;i<bps.length;i++){
+    const x = bps[i];
+    if(x<=1e-9) continue;
+    const Vm = a.V(Math.max(0,x-EPS)), Vp = a.V(Math.min(state.L,x+EPS));
+    const Mm = a.M(Math.max(0,x-EPS)), Mp = a.M(Math.min(state.L,x+EPS));
+    const jumpV = Vp-Vm;
+    let cause = describeCause(x);
+    if(Math.abs(jumpV) > 1e-6){
+      html += stepRow(`x=${fmt(x)}`, `${cause} Shear jumps from <span class="vv">${fmt(Vm)}</span> to <span class="vv">${fmt(Vp)} kN</span>.`);
+    } else if(Math.abs(Mp-Mm) > 1e-6 && Math.abs(jumpV)<1e-6){
+      html += stepRow(`x=${fmt(x)}`, `${cause} Moment jumps from <span class="mm">${fmt(Mm)}</span> to <span class="mm">${fmt(Mp)} kN·m</span>.`);
+    } else if(cause){
+      html += stepRow(`x=${fmt(x)}`, `${cause}`);
+    }
+    if(i<bps.length-1){
+      const xNext = bps[i+1];
+      const hasUdl = state.loads.some(ld=> ld.kind==='udl' && Math.min(ld.pos,ld.pos2) <= x+1e-6 && Math.max(ld.pos,ld.pos2) >= xNext-1e-6);
+      if(hasUdl){
+        html += stepRow('', `From x=${fmt(x)} to x=${fmt(xNext)}: a distributed load acts, so shear varies <i>linearly</i> and moment varies as a <i>parabola</i>.`, true);
+      } else {
+        html += stepRow('', `From x=${fmt(x)} to x=${fmt(xNext)}: no load acts, so shear stays <i>constant</i> and moment varies <i>linearly</i>.`, true);
+      }
+    }
+  }
+
+  html += stepRow('Peak', `Maximum bending moment is <span class="mm">${fmt(a.maxM===-Infinity?0:Math.max(a.maxM,0)) } kN·m</span> and minimum is <span class="mm">${fmt(a.minM===Infinity?0:Math.min(a.minM,0))} kN·m</span> — the largest magnitude usually governs beam design.`);
+
+  el.innerHTML = html;
+}
+function stepRow(x, txt, muted){
+  return `<div class="step"><div class="xmark">${x}</div><div class="txt" style="${muted?'color:var(--muted)':''}">${txt}</div></div>`;
+}
+function describeCause(x){
+  const parts = [];
+  if(!analysisCache.valid) return '';
+  analysisCache.supports.forEach(s=>{ if(Math.abs(s.pos-x)<1e-6) parts.push(`Support reaction <b>R=${fmt(s.R)} kN</b> acts here.`); });
+  state.loads.forEach(ld=>{
+    if(ld.kind==='point' && Math.abs(ld.pos-x)<1e-6) parts.push(`Point load of <b>${fmt(ld.mag)} kN</b> applied here.`);
+    if(ld.kind==='udl' && Math.abs(ld.pos-x)<1e-6) parts.push(`Distributed load begins here.`);
+    if(ld.kind==='udl' && Math.abs(ld.pos2-x)<1e-6) parts.push(`Distributed load ends here.`);
+    if(ld.kind==='moment' && Math.abs(ld.pos-x)<1e-6) parts.push(`Applied moment of <b>${fmt(Math.abs(ld.mag))} kN·m</b> here.`);
+  });
+  return parts.join(' ');
+}
+
+/* =====================================================================
+   FORM WIRING
+===================================================================== */
+function loadFieldsTemplate(kind){
+  if(kind==='point'){
+    return `<div><label>Magnitude (kN)</label><input type="number" id="lf-mag" value="-10" step="0.5"></div>
+            <div><label>Position (m)</label><input type="number" id="lf-pos" value="${(state.L/2).toFixed(1)}" step="0.1"></div>
+            <div style="grid-column:1/-1;font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--muted-dim);margin:-4px 0 8px;">Positive = upward ↑ (same convention as the reactions). A typical gravity load is negative, e.g. −10.</div>`;
+  }
+  if(kind==='udl'){
+    return `<div><label>Intensity (kN/m)</label><input type="number" id="lf-mag" value="-5" step="0.5"></div>
+            <div><label>Start (m)</label><input type="number" id="lf-pos" value="0" step="0.1"></div>
+            <div><label>End (m)</label><input type="number" id="lf-pos2" value="${state.L}" step="0.1"></div>
+            <div style="grid-column:1/-1;font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--muted-dim);margin:-4px 0 8px;">Positive = upward ↑. A typical gravity load is negative, e.g. −5.</div>`;
+  }
+  return `<div><label>Magnitude (kN·m)</label><input type="number" id="lf-mag" value="10" step="0.5"></div>
+          <div><label>Position (m)</label><input type="number" id="lf-pos" value="${(state.L/2).toFixed(1)}" step="0.1"></div>
+          <div style="grid-column:1/-1;font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--muted-dim);margin:-4px 0 8px;">Positive = clockwise ⟳ (matches the ΣM = 0 equations above). Enter a negative value for a counter-clockwise ⟲ moment.</div>`;
+}
+
+function renderLoadList(){
+  const el = document.getElementById('loadList');
+  if(state.loads.length===0){ el.innerHTML = `<div style="color:var(--muted-dim);font-family:'JetBrains Mono',monospace;font-size:11.5px;">No loads yet — add one below, or start from a preset.</div>`; return; }
+  el.innerHTML = state.loads.map(ld=>{
+    let desc='', tag='';
+    if(ld.kind==='point'){ desc=`${fmt(ld.mag)} kN ${ld.mag<0?'↓':'↑'} @ x=${fmt(ld.pos)}m`; tag='point'; }
+    else if(ld.kind==='udl'){ desc=`${fmt(ld.mag)} kN/m ${ld.mag<0?'↓':'↑'}, x=${fmt(ld.pos)}→${fmt(ld.pos2)}m`; tag='udl'; }
+    else { desc=`${fmt(Math.abs(ld.mag))} kN·m ${ld.mag>=0?'CW':'CCW'} @ x=${fmt(ld.pos)}m`; tag='moment'; }
+    return `<div class="loadchip"><div><div class="tag">${tag}</div><div class="desc">${desc}</div></div><button data-del="${ld.id}">✕</button></div>`;
+  }).join('');
+  el.querySelectorAll('[data-del]').forEach(b=>{
+    b.addEventListener('click', ()=>{
+      state.loads = state.loads.filter(ld=>ld.id != b.getAttribute('data-del'));
+      render();
+    });
+  });
+}
+
+function syncFormFromState(){
+  document.getElementById('beamLength').value = state.L;
+  document.getElementById('supportType').value = state.supportType;
+  document.getElementById('posA').value = state.posA;
+  document.getElementById('posB').value = state.posB;
+  document.getElementById('posFixed').value = state.posFixed;
+  document.getElementById('simpleSupportFields').style.display = state.supportType==='simple' ? 'grid' : 'none';
+  document.getElementById('cantileverFields').style.display = state.supportType==='cantilever' ? 'block' : 'none';
+  document.getElementById('loadFields').innerHTML = loadFieldsTemplate(document.getElementById('loadType').value);
+}
+
+function fmt(n){
+  if(n===Infinity || n===-Infinity || Number.isNaN(n)) return '0';
+  const r = Math.round(n*100)/100;
+  return (Object.is(r,-0)?0:r).toString();
+}
+
+/* =====================================================================
+   MAIN RENDER
+===================================================================== */
+let analysisCache = {valid:false};
+function render(){
+  document.getElementById('tb-scenario').textContent = state.supportType==='simple' ? 'Simply Supported / Overhanging' : 'Cantilever';
+  document.getElementById('tb-span').textContent = fmt(state.L) + ' m';
+  document.getElementById('tb-loads').textContent = state.loads.length + ' applied';
+
+  const a = analyze();
+  analysisCache = a;
+
+  document.getElementById('beamSvgHolder').innerHTML = renderBeamSVG(a);
+  renderStatus(a);
+  renderReactions(a);
+  document.getElementById('sfdHolder').innerHTML = renderDiagram(a,'V','var(--shear)',' kN');
+  document.getElementById('bmdHolder').innerHTML = renderDiagram(a,'M','var(--moment)',' kN·m');
+  document.getElementById('vMeta').textContent = a.valid ? `max ${fmt(a.maxV)} · min ${fmt(a.minV)} kN` : '—';
+  document.getElementById('mMeta').textContent = a.valid ? `max ${fmt(a.maxM)} · min ${fmt(a.minM)} kN·m` : '—';
+  renderSteps(a);
+  renderLoadList();
+}
+
+/* =====================================================================
+   EVENTS
+===================================================================== */
+document.getElementById('beamLength').addEventListener('input', e=>{ state.L = Math.max(0.5, Number(e.target.value)||1); render(); });
+document.getElementById('supportType').addEventListener('change', e=>{ state.supportType = e.target.value; syncFormFromState(); render(); });
+document.getElementById('posA').addEventListener('input', e=>{ state.posA = Number(e.target.value)||0; render(); });
+document.getElementById('posB').addEventListener('input', e=>{ state.posB = Number(e.target.value)||0; render(); });
+document.getElementById('posFixed').addEventListener('input', e=>{ state.posFixed = Number(e.target.value)||0; render(); });
+document.getElementById('loadType').addEventListener('change', e=>{ document.getElementById('loadFields').innerHTML = loadFieldsTemplate(e.target.value); });
+document.getElementById('addLoadBtn').addEventListener('click', ()=>{
+  const kind = document.getElementById('loadType').value;
+  const mag = Number(document.getElementById('lf-mag').value)||0;
+  const pos = Number(document.getElementById('lf-pos').value)||0;
+  const pos2 = document.getElementById('lf-pos2') ? Number(document.getElementById('lf-pos2').value)||0 : null;
+  addLoad(kind, mag, pos, pos2);
+  render();
+});
+document.querySelectorAll('[data-preset]').forEach(b=>{
+  b.addEventListener('click', ()=> loadPreset(b.getAttribute('data-preset')));
+});
+
+/* init */
+loadPreset('ss-center');
+</script>
+</body>
+</html>
